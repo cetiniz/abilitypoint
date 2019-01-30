@@ -1,8 +1,10 @@
 FROM ubuntu:18.04
 FROM golang:1.11 AS build
 
-LABEL GOPATH=~/go
-LABEL HOME=~
+WORKDIR /go/src/github.com/cetiniz/abilitypoint
+
+EXPOSE 4000
+
 
 RUN apt-get update
 
@@ -15,15 +17,21 @@ RUN sh /cmake-3.13.1-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
 RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
 RUN cmake --version
 
-ENV OPENSSL_ROOT_DIR=/usr/local/opt/openssl
-ENV PKG_CONFIG_PATH=HOME/seabolt/build/dist/share/pkgconfig
-ENV LD_LIBRARY_PATH=HOME/seabolt/build/dist/lib
-ENV GOPATH=HOME/go
-
 RUN git clone https://github.com/neo4j-drivers/seabolt.git ~/seabolt
 RUN ~/seabolt/make_release.sh
 
+ENV OPENSSL_ROOT_DIR=/usr/local/opt/openssl
+ENV PKG_CONFIG_PATH=/root/seabolt/build/dist/share/pkgconfig
+ENV LD_LIBRARY_PATH=/root/seabolt/build/dist/lib
+ENV GOPATH=/go
 
-RUN git clone https://github.com/cetiniz/abilitypoint.git HOME/go/src/
 
-CMD ["go", "~/go/src/abilitypoint/server.go"]
+RUN rm -rf /go/src/github.com/cetiniz/*
+RUN ls /go/src/github.com/cetiniz/
+RUN rmdir /go/src/github.com/cetiniz/abilitypoint
+RUN mkdir -p /go/src/github.com/cetiniz/
+RUN git clone https://github.com/cetiniz/abilitypoint.git /go/src/github.com/cetiniz/abilitypoint
+RUN go get -d /go/src/github.com/cetiniz/abilitypoint/cmd/
+RUN go get github.com/githubnemo/CompileDaemon
+
+ENTRYPOINT go run ./cmd/*.go

@@ -1,50 +1,39 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Gurpartap/logrus-stack"
+	"github.com/caarlos0/env"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	log "github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
-	"io/ioutil"
 	"net/http"
 	"os"
 )
 
-var base_url, user_name, password string
+// Config contains all environment variables
+type Config struct {
+	BaseURL  string `env:"BASE_URL"`
+	UserName string `env:"USER_NAME"`
+	UserPass string `env:"USER_PASS"`
+}
+
+var cfg Config
 
 func init() {
-	/* CONFIGURATION CODE */
-	jsonFile, err := os.Open("../internal/config.json")
-	if err != nil {
-		logError(err, "Config File")
+	// Configuration ENV Code
+	if err := godotenv.Load(); err != nil {
+		log.Println("File .env not found, reading configuration from ENV")
 	}
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var configuration map[string]interface{}
-	json.Unmarshal([]byte(byteValue), &configuration)
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalln("Failed to parse ENV")
+		os.Exit(1)
+	}
 
-	if str, ok := configuration["base_url"].(string); ok {
-		base_url = str
-	} else {
-		fmt.Println("Can't start server because database url wasn't specified in config!")
-		os.Exit(1)
-	}
-	if str, ok := configuration["base_url"].(string); ok {
-		user_name = str
-	} else {
-		fmt.Println("Can't start server because database username wasn't specified in config!")
-		os.Exit(1)
-	}
-	if str, ok := configuration["base_url"].(string); ok {
-		password = str
-	} else {
-		fmt.Println("Can't start server because database password wasn't specified in config!")
-		os.Exit(1)
-	}
+	fmt.Printf("Password: %s\n", cfg.UserPass)
 
 	// Code for nicer looking logger
 	log.AddHook(logrus_stack.StandardHook())
@@ -82,7 +71,7 @@ func fetchNeoGraph() []Edge {
 		err     error
 	)
 
-	if driver, err = neo4j.NewDriver("bolt://"+base_url+":7687", neo4j.BasicAuth(user_name, password, "")); err != nil {
+	if driver, err = neo4j.NewDriver("bolt://"+cfg.BaseURL+":7687", neo4j.BasicAuth(cfg.UserName, cfg.UserPass, "")); err != nil {
 		fmt.Println("ERROR")
 	}
 	// Used to destroy driver after calls
