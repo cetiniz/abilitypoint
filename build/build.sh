@@ -1,9 +1,9 @@
 #!/bin/bash
-export GOOS=linux
-export GOOS=darwin
 
 CUR_DIR=$(pwd)
 
 cd $GOPATH/src/github.com/cetiniz/abilitypoint/cmd/
+export GOOS=linux
 sudo go build -o abilitypoint-linux-amd64
+export GOOS=darwin
 cd $CUR_DIR

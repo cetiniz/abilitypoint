@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/cetiniz/abilitypoint/internal"
+	"github.com/cetiniz/abilitypoint/pkg/config"
 	"github.com/cetiniz/abilitypoint/pkg/dbclient"
 	"github.com/cetiniz/abilitypoint/pkg/services"
 )

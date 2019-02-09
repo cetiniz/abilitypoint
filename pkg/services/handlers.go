@@ -8,6 +8,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"net/http"
+	"strings"
 )
 
 // DBClient is an instance of the neo4j db
@@ -55,4 +56,30 @@ func fetchGraph(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+}
+
+func createNode(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	nodeType := r.URL.Query().Get("type")
+	if nodeType == "" {
+		http.Error(w, "Node Type not Specified in Query!", 400)
+	}
+	decoder := json.NewDecoder(r.Body)
+
+	var nodeStruct interface{}
+	err := decoder.Decode(&nodeStruct)
+	nodeStruct = nodeStruct.(map[string]interface{})
+
+	if nodeType == "skill" {
+		var skillStruct model.Skill
+		mapstructure.Decode(nodeStruct, &skillStruct)
+		_, err := DBClient.RunQuery("CREATE (n:" + strings.Title(nodeType) + "{name:'" + skillStruct.Name + "', description:'" + skillStruct.Description + "'})")
+		if err != nil {
+			http.Error(w, "Error when creating the node!", 400)
+		}
+	}
+	if err != nil {
+		http.Error(w, "POST Body improperly Formatted!", 400)
+	}
+	fmt.Printf("%+v\n", nodeStruct)
 }
