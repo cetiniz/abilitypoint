@@ -23,6 +23,12 @@ var routes = Routes{
 		fetchGraph,
 	},
 	Route{
+		"GetAll",   // Name
+		"GET",      // HTTP method
+		"/api/all", // Route pattern
+		fetchAll,
+	},
+	Route{
 		"CreateNode", // Name
 		"POST",       // HTTP method
 		"/api/node",  // Route pattern

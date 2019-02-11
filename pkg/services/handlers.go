@@ -3,12 +3,13 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/cetiniz/abilitypoint/pkg/dbclient"
 	"github.com/cetiniz/abilitypoint/pkg/model"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
-	"net/http"
-	"strings"
 )
 
 // DBClient is an instance of the neo4j db
@@ -46,6 +47,63 @@ func fetchGraph(w http.ResponseWriter, r *http.Request) {
 			To,
 		}
 		skills = append(skills, newEdge)
+	}
+
+	js, err := json.Marshal(skills)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func fetchAll(w http.ResponseWriter, r *http.Request) {
+	result, err := DBClient.RunQuery("MATCH (n:Skill) WITH [n, 1] AS nodes return nodes")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// var skills []model.Edge
+	var skills []model.Skill
+
+	for _, node := range result {
+		var (
+			thisNode model.Skill
+		)
+		/* 		var (
+			From         model.Skill
+			relationship string
+			To           model.Skill
+		) */
+		err := mapstructure.Decode(node.([]interface{})[0].(neo4j.Node).Props(), &thisNode) //, &From)
+		if err != nil {
+			fmt.Println(err, "Decoding")
+		}
+		var newNode = model.Skill{
+			thisNode.Resources,
+			thisNode.Images,
+			thisNode.Name,
+			thisNode.Description,
+		}
+
+		skills = append(skills, newNode)
+
+		/* relationship, ok := node.([]interface{})[1].(string)
+		if !ok {
+			fmt.Println(err, "Decoding")
+		}
+		err = mapstructure.Decode(node.([]interface{})[2].(neo4j.Node).Props(), &To)
+		if err != nil {
+			fmt.Println(err, "Decoding")
+		}
+		var newEdge = model.Edge{
+			From,
+			relationship,
+			To,
+		}
+		skills = append(skills, newEdge) */
 	}
 
 	js, err := json.Marshal(skills)
