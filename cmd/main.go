@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/cetiniz/abilitypoint/pkg/config"
-	"github.com/cetiniz/abilitypoint/pkg/dbclient"
-	"github.com/cetiniz/abilitypoint/pkg/services"
+	"github.com/abilitypoint/pkg/config"
+	"github.com/abilitypoint/pkg/dbclient"
+	"github.com/abilitypoint/pkg/services"
 )
 
 // PORT specifies port for server to listen on
