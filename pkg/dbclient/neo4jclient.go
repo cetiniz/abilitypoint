@@ -1,9 +1,10 @@
 package dbclient
 
 import (
+	"encoding/json"
 	"fmt"
-
 	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"net/http"
 )
 
 var (
@@ -45,6 +46,48 @@ func (nc *Neo4jClient) RunQuery(queryString string) ([]interface{}, error) {
 // Neo4jClient driver encapsulation
 type Neo4jClient struct {
 	driver neo4j.Driver
+}
+
+// Struct to hold statements
+type neo4jStatements struct {
+	statements []neo4jStatement
+}
+
+// Struct to hold single statement
+type neo4jStatement struct {
+	statement string
+}
+
+type neo4jResponse struct {
+	results []neo4jResult
+	errors  []neo4jError
+}
+
+type neo4jResult struct {
+	columns []string
+	data    []neo4jRow
+}
+
+type neo4jError struct {
+}
+
+type neo4jRow struct {
+	row  []string
+	meta []string
+}
+
+func (nc *Neo4jClient) executeSingleTransaction(query string) {
+	var payload neo4jStatements
+	payload.statements = make([]neo4jStatement, 0)
+	payload.statements = append(payload.statements, neo4jStatement{statement: query})
+
+	marshalledPayload, err := json.Marshal(payload)
+
+	res, err := http.Post(nc.url+":7474:db/data/transaction/commit", "application/json", marshalledPayload)
+
+	var neo4jRes neo4jResponse
+	decoder := json.NewDecoder(res.Body)
+	decoder.Decode(&neo4jRes)
 }
 
 // OpenNeo4jClient spawns client instance
